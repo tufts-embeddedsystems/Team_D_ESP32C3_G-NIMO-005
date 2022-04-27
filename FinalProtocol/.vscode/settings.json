@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "freertos.h": "c",
+        "portable.h": "c",
+        "portmacro.h": "c"
+    }
+}
