@@ -62,7 +62,7 @@ static void check_efuse(void)
         printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
     }
 #else
-#error "This example is configured for ESP32/ESP32S2."
+//#error "This example is configured for ESP32/ESP32S2."
 #endif
 }
 
@@ -87,7 +87,7 @@ void app_main() {
     adc1_config_width(width);
     adc1_config_channel_atten(channel_sensor, atten);
     adc1_config_channel_atten(channel_therm, atten);
-    esp_err_t esp_sleep_enable_timer_wakeup((uint64_t) TIME_ASLEEP); // Enable sleep mode timer
+    //esp_err_t esp_sleep_enable_timer_wakeup((uint64_t) TIME_ASLEEP); // Enable sleep mode timer
 
     int32_t sensor_reading=0;
     int32_t thermistor_reading=0;
@@ -110,6 +110,11 @@ void app_main() {
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
     int32_t temp_therm = Convert2Temp(voltage_therm);
 
+    printf("Raw: %d\tsensorTemp: %dC\n", sensor_reading, temp_sensor);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    printf("Raw: %d\tthermTemp: %dC\n", thermistor_reading, temp_therm);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
     packets[count].sensor_temp = temp_sensor;
     packets[count].thermistor_temp = temp_therm;
     //packets[count].time
@@ -122,7 +127,7 @@ void app_main() {
 
             count = 0;
         }
-        esp_deep_sleep_start(); // Enter deep sleep
+        //esp_deep_sleep_start(); // Enter deep sleep
     }
 }
 
