@@ -3,5 +3,6 @@
         "freertos.h": "c",
         "portable.h": "c",
         "portmacro.h": "c"
-    }
+    },
+    "cmake.configureOnOpen": true
 }

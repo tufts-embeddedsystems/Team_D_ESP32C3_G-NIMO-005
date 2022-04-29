@@ -96,6 +96,11 @@ void app_main() {
 
     uint8_t count = 0; // Amount of packets stored in current batch
 
+    //Characterize ADC
+    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, width, DEFAULT_VREF, adc_chars);
+    print_char_val_type(val_type);
+
     while (1) {
 
     //Multisampling
@@ -112,9 +117,10 @@ void app_main() {
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
     int32_t temp_therm = Convert2Temp(voltage_therm);
 
-    printf("Raw: %d\tsensorTemp: %dC\n", sensor_reading, temp_sensor);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    printf("Raw: %d\tthermTemp: %dC\n", thermistor_reading, temp_therm);
+    //Print to serial
+    printf("Raw: %d\tvolt: %d\tsensorTemp: %dC\n", sensor_reading, voltage_sensor, temp_sensor);
+    vTaskDelay(pdMS_TO_TICKS(50));
+    printf("Raw: %d\tvolt: %d\tthermTemp: %dC\n", thermistor_reading, voltage_therm, temp_therm);
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     packets[count].sensor_temp = temp_sensor;
@@ -134,5 +140,5 @@ void app_main() {
 }
 
 int32_t Convert2Temp(uint32_t volt){
-    return ((volt/3300)*175.72-46.85)*1000;
+    return ((volt/3300.0)*175.72-46.85)*1000;
 }
