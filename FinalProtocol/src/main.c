@@ -6,12 +6,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include "esp_wifi.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "esp_event.h"
+#include "esp_netif.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
+#include "lwip/sockets.h"
+#include "lwip/dns.h"
+#include "lwip/netdb.h"
+#include "esp_log.h"
+#include "mqtt_client.h"
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+//#include "minimal_wifi.h"
+#include "esp_sleep.h"
+
+#define BROKER_URI "mqtt://en1-pi.eecs.tufts.edu"
 
 // struct definition for data packet
 struct packet {
@@ -23,7 +41,8 @@ struct packet {
     uint8_t team_data;
 };
 
-#define TIME_ASLEEP 3600000000
+//#define TIME_ASLEEP 3600000000
+//#define TIME_ASLEEP 10000 // Stay asleep for 10 seconds for testing
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
@@ -80,21 +99,28 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 int32_t Convert2Temp(uint32_t volt);
 
 void app_main() {
+    uint64_t time_asleep = 10000;
+
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
-    
-    struct packet packets[10]; // Array of packets to store data 
 
+    /*
+    // Initialize the MQTT client
+    esp_mqtt_client_config_t mqtt_cfg = {
+        .uri = BROKER_URI,
+    };
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_start(client);
+    */
+    
     //Configure ADC
     adc1_config_width(width);
     adc1_config_channel_atten(channel_sensor, atten);
     adc1_config_channel_atten(channel_therm, atten);
-    //esp_err_t esp_sleep_enable_timer_wakeup((uint64_t) TIME_ASLEEP); // Enable sleep mode timer
+    esp_err_t esp_sleep_enable_timer_wakeup(time_asleep); // Enable sleep mode timer
 
     int32_t sensor_reading=0;
     int32_t thermistor_reading=0;
-
-    uint8_t count = 0; // Amount of packets stored in current batch
 
     //Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
@@ -117,25 +143,15 @@ void app_main() {
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
     int32_t temp_therm = Convert2Temp(voltage_therm);
 
-    //Print to serial
-    printf("Raw: %d\tvolt: %d\tsensorTemp: %dC\n", sensor_reading, voltage_sensor, temp_sensor);
-    vTaskDelay(pdMS_TO_TICKS(50));
-    printf("Raw: %d\tvolt: %d\tthermTemp: %dC\n", thermistor_reading, voltage_therm, temp_therm);
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    struct packet curr_reading;
+    curr_reading.sensor_temp = temp_sensor;
+    curr_reading.thermistor_temp = temp_therm;
+    // curr_reading.time = Update after connecting to WiFi
+    curr_reading.battery = 255;
+    curr_reading.data_len = 0;
 
-    packets[count].sensor_temp = temp_sensor;
-    packets[count].thermistor_temp = temp_therm;
-    //packets[count].time
-    packets[count].battery = 255;
-    packets[count].data_len = 0;
-
-    count++;
-        if (count == 10) {
-            // DO MQTT
-
-            count = 0;
-        }
-        //esp_deep_sleep_start(); // Enter deep sleep
+    
+    esp_deep_sleep_start(); // Enter deep sleep
     }
 }
 
