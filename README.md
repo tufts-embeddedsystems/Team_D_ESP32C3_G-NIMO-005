@@ -9,3 +9,9 @@
 		- https://docs.espressif.com/projects/esptool/en/latest/esp32c3/advanced-topics/boot-mode-selection.html
 		- https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
 			- section 2.4 strapping pin
+
+## Documentation
+- For an intructotion and overview of the project, see the Final Project Report.
+- For in-depth documentation on code, continue reading this readme.
+- For in-depth documentation on the enclosure, continue reading this readme?.
+- For documentation on sensor location and status, visit the EE-193 website. (and mabye the other documentation?)
