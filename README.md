@@ -13,5 +13,7 @@
 ## Documentation
 - For an intructotion and overview of the project, see the Final Project Report.
 - For in-depth documentation on code, continue reading this readme.
-- For in-depth documentation on the enclosure, continue reading this readme?.
-- For documentation on sensor location and status, visit the EE-193 website. (and mabye the other documentation?)
+- For in-depth documentation on the enclosure find the readme in the "Enclosure Folder" along with relevent files.
+- Documentation on sensor location and status, visit the EE-193 website. (and mabye the other documentation?)
+- Datasheets are collected in the ... folder. 
+- 
