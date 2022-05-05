@@ -49,8 +49,8 @@ struct packet {
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
-static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO34 if ADC1, GPIO14 if ADC2
-static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO17 for ESP32_C3
+static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO3 for ESP32_C3
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 //#elif CONFIG_IDF_TARGET_ESP32S2
 //static const adc_channel_t channel = ADC_CHANNEL_6;     // GPIO7 if ADC1, GPIO17 if ADC2
@@ -98,8 +98,14 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 
 int32_t Convert2Temp(uint32_t volt);
 
+
+RTC_DATA_ATTR static int boot_count = 0;//count reboot time from deep sleep
+                                        //RTC_DATA_ATTR stores data to RTC memory and maintains its value during deep sleep
+
 void app_main() {
-    uint64_t time_asleep = 10000;
+
+    uint64_t time_asleep = 10000; // in us
+    uint64_t time_asleep_test = 5000000;// 5 sec
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
@@ -117,7 +123,6 @@ void app_main() {
     adc1_config_width(width);
     adc1_config_channel_atten(channel_sensor, atten);
     adc1_config_channel_atten(channel_therm, atten);
-    esp_err_t esp_sleep_enable_timer_wakeup(time_asleep); // Enable sleep mode timer
 
     int32_t sensor_reading=0;
     int32_t thermistor_reading=0;
@@ -128,6 +133,8 @@ void app_main() {
     print_char_val_type(val_type);
 
     while (1) {
+    printf("boot time: %d\n", boot_count);
+    boot_count++;
 
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
@@ -143,6 +150,12 @@ void app_main() {
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
     int32_t temp_therm = Convert2Temp(voltage_therm);
 
+    //Print to serial FOR TESTING
+    //printf("Raw: %d\tvolt: %d\tsensorTemp: %dC\n", sensor_reading, voltage_sensor, temp_sensor);
+    //vTaskDelay(pdMS_TO_TICKS(50));
+    //printf("Raw: %d\tvolt: %d\tthermTemp: %dC\n", thermistor_reading, voltage_therm, temp_therm);
+    //vTaskDelay(pdMS_TO_TICKS(1000));
+
     struct packet curr_reading;
     curr_reading.sensor_temp = temp_sensor;
     curr_reading.thermistor_temp = temp_therm;
@@ -151,7 +164,7 @@ void app_main() {
     curr_reading.data_len = 0;
 
     
-    esp_deep_sleep_start(); // Enter deep sleep
+    esp_deep_sleep(time_asleep_test);
     }
 }
 
