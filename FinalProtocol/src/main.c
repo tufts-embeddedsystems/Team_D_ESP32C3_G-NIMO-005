@@ -39,7 +39,7 @@ struct packet {
     time_t time; // Epoch time
     uint8_t battery; // Percentage of battery capacity, 0 to 100, 255 means no battery or no measurement
     uint16_t data_len;
-    uint8_t team_data;
+    //uint8_t team_data;
 };
 
 //#define TIME_ASLEEP 3600000000
@@ -100,7 +100,7 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 int32_t Convert2Temp(uint32_t volt);
 
 void app_main() {
-    uint64_t time_asleep = 10000; 
+    uint64_t time_asleep = 100000000; //time in us
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
@@ -170,11 +170,13 @@ void app_main() {
     curr_reading.battery = 255;
     curr_reading.data_len = 0;
 
-    char message[50];
-    sprintf(message, "%ld, %d, %d, %d, %d", curr_reading.time,curr_reading.sensor_temp, 
-    curr_reading.thermistor_temp, curr_reading.battery, curr_reading.data_len);
-    esp_mqtt_client_publish(client, "node/dapper-dingos/test1", message, 0, 0, 0);
-
+    //char message[50];
+    //sprintf(message, "%ld, %d, %d, %d, %d", curr_reading.time,curr_reading.sensor_temp, 
+    //curr_reading.thermistor_temp, curr_reading.battery, curr_reading.data_len);
+    void *message = &curr_reading;
+    const char *TAG = "MQTT_HANDLE";
+    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test1", (char *)message, 19, 0, 0);
+    ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
     }
 }
