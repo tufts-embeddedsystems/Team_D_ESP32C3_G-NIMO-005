@@ -50,8 +50,8 @@ struct packet {
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
-static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO 17 for ESP32_C3
-static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO 3 for ESP32_C3
+static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO 1, pin 17 for ESP32_C3, the chip
+static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO 3, pin 15 for ESP32_C3, the thermistor
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 //#elif CONFIG_IDF_TARGET_ESP32S2
 //static const adc_channel_t channel = ADC_CHANNEL_6;     // GPIO7 if ADC1, GPIO17 if ADC2
