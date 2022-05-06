@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -26,7 +27,7 @@
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
-//#include "minimal_wifi.h"
+#include "minimal_wifi.h"
 #include "esp_sleep.h"
 
 #define BROKER_URI "mqtt://en1-pi.eecs.tufts.edu"
@@ -42,15 +43,15 @@ struct packet {
 };
 
 //#define TIME_ASLEEP 3600000000
-//#define TIME_ASLEEP 10000 // Stay asleep for 10 seconds for testing
+// #define TIME_ASLEEP 10000 // Stay asleep for 10 seconds for testing
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
-static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO17 for ESP32_C3
-static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO3 for ESP32_C3
+static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO34 if ADC1, GPIO14 if ADC2
+static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO34 if ADC1, GPIO14 if ADC2
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 //#elif CONFIG_IDF_TARGET_ESP32S2
 //static const adc_channel_t channel = ADC_CHANNEL_6;     // GPIO7 if ADC1, GPIO17 if ADC2
@@ -98,26 +99,36 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 
 int32_t Convert2Temp(uint32_t volt);
 
-
-RTC_DATA_ATTR static int boot_count = 0;//count reboot time from deep sleep
-                                        //RTC_DATA_ATTR stores data to RTC memory and maintains its value during deep sleep
-
 void app_main() {
-
-    uint64_t time_asleep = 10000; // in us
-    uint64_t time_asleep_test = 5000000;// 5 sec
+    uint64_t time_asleep = 10000; 
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
 
-    /*
+     // `ESP_ERROR_CHECK` is a macro which checks that the return value of a function is
+    // `ESP_OK`.  If not, it prints some debug information and aborts the program.
+
+    // Enable Flash (aka non-volatile storage, NVS)
+    // The WiFi stack uses this to store some persistent information
+    ESP_ERROR_CHECK(nvs_flash_init());
+
+    // Initialize the network software stack
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    // Initialize the event loop, a separate thread which checks for events
+    // (like WiFi being connected or receiving an MQTT message) and dispatches
+    // functions to handle them.
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    // Now connect to WiFi
+    ESP_ERROR_CHECK(example_connect());
+
     // Initialize the MQTT client
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = BROKER_URI,
     };
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_start(client);
-    */
     
     //Configure ADC
     adc1_config_width(width);
@@ -133,8 +144,6 @@ void app_main() {
     print_char_val_type(val_type);
 
     while (1) {
-    printf("boot time: %d\n", boot_count);
-    boot_count++;
 
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
@@ -150,21 +159,23 @@ void app_main() {
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
     int32_t temp_therm = Convert2Temp(voltage_therm);
 
-    //Print to serial FOR TESTING
-    //printf("Raw: %d\tvolt: %d\tsensorTemp: %dC\n", sensor_reading, voltage_sensor, temp_sensor);
-    //vTaskDelay(pdMS_TO_TICKS(50));
-    //printf("Raw: %d\tvolt: %d\tthermTemp: %dC\n", thermistor_reading, voltage_therm, temp_therm);
-    //vTaskDelay(pdMS_TO_TICKS(1000));
-
     struct packet curr_reading;
     curr_reading.sensor_temp = temp_sensor;
     curr_reading.thermistor_temp = temp_therm;
-    // curr_reading.time = Update after connecting to WiFi
+
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    curr_reading.time = current_time.tv_sec;
+    
     curr_reading.battery = 255;
     curr_reading.data_len = 0;
 
-    
-    esp_deep_sleep(time_asleep_test);
+    char message[50];
+    sprintf(message, "%ld, %d, %d, %d, %d", curr_reading.time,curr_reading.sensor_temp, 
+    curr_reading.thermistor_temp, curr_reading.battery, curr_reading.data_len);
+    esp_mqtt_client_publish(client, "node/dapper-dingos/test1", message, 0, 0, 0);
+
+    esp_deep_sleep(time_asleep); // Enter deep sleep
     }
 }
 
