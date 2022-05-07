@@ -37,7 +37,7 @@ struct packet {
     int32_t sensor_temp; // Temperature in C, multiplied by 1000
     int32_t thermistor_temp; // Temp in degrees C, -2^31 is unused
     time_t time; // Epoch time
-    uint8_t battery; // Percentage of battery capacity, 0 to 100, 255 means no battery or no measurement
+    uint16_t battery; // Percentage of battery capacity, 0 to 100, 255 means no battery or no measurement
     uint16_t data_len;
     //uint8_t team_data;
 };
@@ -50,14 +50,15 @@ struct packet {
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
-static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO 1, pin 17 for ESP32_C3, the chip
-static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO 3, pin 15 for ESP32_C3, the thermistor
+static const adc_channel_t channel_sensor = ADC_CHANNEL_1;     //GPIO 17 for ESP32_C3
+//static const adc_channel_t channel_therm = ADC_CHANNEL_6;     //GPIO 17 34 for ESP32
+static const adc_channel_t channel_therm = ADC_CHANNEL_3;     //GPIO 3 for ESP32_C3
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 //#elif CONFIG_IDF_TARGET_ESP32S2
 //static const adc_channel_t channel = ADC_CHANNEL_6;     // GPIO7 if ADC1, GPIO17 if ADC2
 //static const adc_bits_width_t width = ADC_WIDTH_BIT_13;
 //#endif
-static const adc_atten_t atten = ADC_ATTEN_DB_0;
+static const adc_atten_t atten = ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
 static void check_efuse(void)
@@ -98,13 +99,15 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 }
 
 int32_t Convert2Temp(uint32_t volt);
+int32_t volt2R(uint32_t volt);
+int32_t Convert2Temp_therm(uint32_t volt);
 
 void app_main() {
     uint64_t time_asleep = 100000000; //time in us
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
-
+    /*
      // `ESP_ERROR_CHECK` is a macro which checks that the return value of a function is
     // `ESP_OK`.  If not, it prints some debug information and aborts the program.
 
@@ -129,7 +132,8 @@ void app_main() {
     };
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_start(client);
-    
+    */
+
     //Configure ADC
     adc1_config_width(width);
     adc1_config_channel_atten(channel_sensor, atten);
@@ -157,7 +161,13 @@ void app_main() {
     uint32_t voltage_sensor = esp_adc_cal_raw_to_voltage(sensor_reading, adc_chars);
     uint32_t voltage_therm = esp_adc_cal_raw_to_voltage(thermistor_reading, adc_chars);
     int32_t temp_sensor = Convert2Temp(voltage_sensor);
-    int32_t temp_therm = Convert2Temp(voltage_therm);
+    int32_t temp_therm = Convert2Temp_therm(voltage_therm);
+
+    //Print to serial FOR TESTING
+    //printf("Raw: %d\tvolt: %d\tsensorTemp: %dC\n", sensor_reading, voltage_sensor, temp_sensor);
+    //vTaskDelay(pdMS_TO_TICKS(50));
+    //printf("Raw: %d\tvolt: %d\tthermTemp: %dC\n", thermistor_reading, voltage_therm, temp_therm);
+    //vTaskDelay(pdMS_TO_TICKS(1000));
 
     struct packet curr_reading;
     curr_reading.sensor_temp = temp_sensor;
@@ -170,17 +180,28 @@ void app_main() {
     curr_reading.battery = 255;
     curr_reading.data_len = 0;
 
-    //char message[50];
-    //sprintf(message, "%ld, %d, %d, %d, %d", curr_reading.time,curr_reading.sensor_temp, 
-    //curr_reading.thermistor_temp, curr_reading.battery, curr_reading.data_len);
+    /*
     void *message = &curr_reading;
     const char *TAG = "MQTT_HANDLE";
-    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test1", (char *)message, 19, 0, 0);
+    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test_from32notC3", (char *)message, 19, 0, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
+    */
     }
 }
 
 int32_t Convert2Temp(uint32_t volt){
     return ((volt/3300.0)*175.72-46.85)*1000;
+}
+
+int32_t volt2R(uint32_t volt){
+    //return resistance in Ohm (for thermistor)
+    return((volt*100000.0)/(3300.0-volt));
+}
+
+int32_t Convert2Temp_therm(uint32_t volt){
+    //TODO: find a better way to fit the curve. 
+    double R = volt2R(volt);
+    double T = -22.53*log(R)+294.27;
+    return T;
 }
