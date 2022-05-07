@@ -107,8 +107,8 @@ void app_main() {
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
-    /*
-     // `ESP_ERROR_CHECK` is a macro which checks that the return value of a function is
+    
+    // `ESP_ERROR_CHECK` is a macro which checks that the return value of a function is
     // `ESP_OK`.  If not, it prints some debug information and aborts the program.
 
     // Enable Flash (aka non-volatile storage, NVS)
@@ -132,7 +132,7 @@ void app_main() {
     };
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_start(client);
-    */
+    
 
     //Configure ADC
     adc1_config_width(width);
@@ -180,13 +180,13 @@ void app_main() {
     curr_reading.battery = 255;
     curr_reading.data_len = 0;
 
-    /*
+    
     void *message = &curr_reading;
     const char *TAG = "MQTT_HANDLE";
     int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test_from32notC3", (char *)message, 19, 0, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
-    */
+    
     }
 }
 
@@ -202,6 +202,6 @@ int32_t volt2R(uint32_t volt){
 int32_t Convert2Temp_therm(uint32_t volt){
     //TODO: find a better way to fit the curve. 
     double R = volt2R(volt);
-    double T = -22.53*log(R)+294.27;
+    double T = (-22.53*log(R)+294.27)*1000;
     return T;
 }
