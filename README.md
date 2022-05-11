@@ -18,3 +18,7 @@
 - For the PCB design, see the Zip file in this repository with KiCAD files
 - For the enclosure design, see the Zip file in this repository with Fusion360 files
 - A archive of the teams Google Drive folder is also included in a zip folder in this repository
+
+
+## Contact Info:
+Contact Bjorn Isaacson at bjornaisaacson@gmail.com for information about the enclosure, or batteries.  
