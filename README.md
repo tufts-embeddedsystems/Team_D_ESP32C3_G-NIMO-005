@@ -11,9 +11,10 @@
 			- section 3.3 strapping pin
 
 ## Documentation
-- For an intructotion and overview of the project, see the Final Project Report.
+- For an introductotion and overview of the project, see the Final Project Report.
 - For in-depth documentation on code, continue reading this readme.
-- For in-depth documentation on the enclosure find the readme in the "Enclosure Folder" along with relevent files.
-- Documentation on sensor location and status, visit the EE-193 website. (and mabye the other documentation?)
+- Documentation on sensor location and status, can be found by visiting the EE-193 website. (and mabye the other documentation?)
 - Datasheets are collected in the ... folder. 
-- 
+- For the PCB design, see the Zip file in this repository with KiCAD files
+- For the enclosure design, see the Zip file in this repository with Fusion360 files
+- A archive of the teams Google Drive folder is also included in a zip folder in this repository
