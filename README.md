@@ -10,8 +10,8 @@
 		- https://www.espressif.com/sites/default/files/documentation/esp32-c3-wroom-02_datasheet_en.pdf
 			- section 3.3 strapping pin
 
-## Documentation
-- For an introductotion and overview of the project, see the Final Project Report.
+## Resources and Documentation
+- For an introduction and overview of the project, see the Final Project Report.
 - For in-depth documentation on code, continue reading this readme.
 - Documentation on sensor location and status, can be found by visiting the EE-193 website. (and mabye the other documentation?)
 - Datasheets are collected in the ... folder. 
