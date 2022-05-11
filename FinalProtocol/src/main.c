@@ -107,8 +107,7 @@ void app_main() {
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
-    
-    
+
     // `ESP_ERROR_CHECK` is a macro which checks that the return value of a function is
     // `ESP_OK`.  If not, it prints some debug information and aborts the program.
 
@@ -149,6 +148,14 @@ void app_main() {
 
     while (1) {
 
+    /*
+    uint8_t ChipID[6];
+    esp_efuse_mac_get_default(ChipID);   
+    printf("%02X%02X%02X%02X%02X%02X\n",ChipID[0],ChipID[1],ChipID[2],ChipID[3],ChipID[4],ChipID[5]);
+    vTaskDelay(pdMS_TO_TICKS(1000));  
+    */ 
+    
+    vTaskDelay(pdMS_TO_TICKS(10)); // Let sensor warm up first
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
         sensor_reading += adc1_get_raw((adc1_channel_t)channel_sensor);
@@ -182,7 +189,7 @@ void app_main() {
 
     void *message = &curr_reading;
     const char *TAG = "MQTT_HANDLE";
-    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test5", (char *)message, 19, 0, 0);
+    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/node1_test", (char *)message, 19, 0, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
     }
