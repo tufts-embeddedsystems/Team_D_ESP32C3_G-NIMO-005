@@ -39,7 +39,7 @@ struct packet {
     int32_t thermistor_temp; // Temp in degrees C, -2^31 is unused
     uint16_t battery; // Percentage of battery capacity, 0 to 100, 255 means no battery or no measurement
     uint16_t data_len;
-    //uint8_t team_data;
+    uint8_t team_data;
 };
 
 //#define TIME_ASLEEP 3600000000
@@ -47,6 +47,7 @@ struct packet {
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
+#define CP_GPIO         2           //GPIO for chip sensor power       
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
@@ -103,7 +104,7 @@ int32_t volt2R(uint32_t volt);
 int32_t Convert2Temp_therm(uint32_t volt);
 
 void app_main() {
-    uint64_t time_asleep = 10000000; //time in us
+    uint64_t time_asleep = 20000000; //time in us
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
@@ -146,6 +147,9 @@ void app_main() {
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, width, DEFAULT_VREF, adc_chars);
     print_char_val_type(val_type);
 
+    gpio_reset_pin(CP_GPIO);
+    gpio_set_direction(CP_GPIO, GPIO_MODE_OUTPUT);
+
     while (1) {
 
     /*
@@ -154,8 +158,9 @@ void app_main() {
     printf("%02X%02X%02X%02X%02X%02X\n",ChipID[0],ChipID[1],ChipID[2],ChipID[3],ChipID[4],ChipID[5]);
     vTaskDelay(pdMS_TO_TICKS(1000));  
     */ 
-    
-    vTaskDelay(pdMS_TO_TICKS(10)); // Let sensor warm up first
+    gpio_set_level(CP_GPIO, 1);
+    vTaskDelay(pdMS_TO_TICKS(2000)); // Let sensor warm up first
+
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
         sensor_reading += adc1_get_raw((adc1_channel_t)channel_sensor);
@@ -186,10 +191,11 @@ void app_main() {
     
     curr_reading.battery = 255;
     curr_reading.data_len = 0;
+    curr_reading.team_data = 0;
 
     void *message = &curr_reading;
     const char *TAG = "MQTT_HANDLE";
-    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/node1_test", (char *)message, 19, 0, 0);
+    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test_ESP32YesC3", (char *)message, 19, 0, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
     }
