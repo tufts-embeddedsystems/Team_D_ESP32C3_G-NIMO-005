@@ -47,7 +47,8 @@ struct packet {
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
-#define CP_GPIO         2           //GPIO for chip sensor power       
+#define CP_GPIO         GPIO_NUM_0           //GPIO for chip sensor power
+#define THM_GPIO         GPIO_NUM_2           //GPIO for thermistor power         
 
 static esp_adc_cal_characteristics_t *adc_chars;
 //#if CONFIG_IDF_TARGET_ESP32
@@ -104,7 +105,7 @@ int32_t volt2R(uint32_t volt);
 int32_t Convert2Temp_therm(uint32_t volt);
 
 void app_main() {
-    uint64_t time_asleep = 20000000; //time in us
+    uint64_t time_asleep = 3600000000; //time in us
 
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
@@ -148,17 +149,23 @@ void app_main() {
     print_char_val_type(val_type);
 
     gpio_reset_pin(CP_GPIO);
+    gpio_reset_pin(THM_GPIO);
     gpio_set_direction(CP_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(THM_GPIO, GPIO_MODE_OUTPUT);
 
     while (1) {
 
-    /*
+    
     uint8_t ChipID[6];
     esp_efuse_mac_get_default(ChipID);   
     printf("%02X%02X%02X%02X%02X%02X\n",ChipID[0],ChipID[1],ChipID[2],ChipID[3],ChipID[4],ChipID[5]);
     vTaskDelay(pdMS_TO_TICKS(1000));  
-    */ 
+    
+    gpio_set_level(CP_GPIO,0);
+    gpio_set_level(THM_GPIO,0);
+    vTaskDelay(pdMS_TO_TICKS(50));
     gpio_set_level(CP_GPIO, 1);
+    gpio_set_level(THM_GPIO,1);
     vTaskDelay(pdMS_TO_TICKS(2000)); // Let sensor warm up first
 
     //Multisampling
@@ -195,7 +202,7 @@ void app_main() {
 
     void *message = &curr_reading;
     const char *TAG = "MQTT_HANDLE";
-    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/test_ESP32YesC3", (char *)message, 19, 0, 0);
+    int msg_id = esp_mqtt_client_publish(client, "nodes/dapper-dingos/NODE1", (char *)message, 19, 0, 0); //change this for every node
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     esp_deep_sleep(time_asleep); // Enter deep sleep
     }
