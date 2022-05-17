@@ -1,7 +1,7 @@
 # Team_D_ESP32C3_G-NIMO-005
 
 ## Issues
-Current Status: One node has been deployed, outside the SEC. It's temperature reading is high, but is updated to the dashboard: http://en1-pi.eecs.tufts.edu/ at NODE1 for apper-dingos" Pictures of it installed on 5/13/22 are in the deployedNodeImages folder. 
+Current Status: One node has been deployed, outside the SEC. It's temperature reading is high, but is updated to the dashboard (http://en1-pi.eecs.tufts.edu/) at NODE1 for "dapper-dingos" (Direct Link: http://en1-pi.eecs.tufts.edu/node/dapper-dingos/NODE1). Pictures of it installed on 5/13/22 are in the deployedNodeImages folder. 
 
 ## Issues
 - Uploading issue with bootloader [timed-out-waiting-for-packet-header]
