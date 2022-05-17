@@ -1,6 +1,9 @@
 # Team_D_ESP32C3_G-NIMO-005
 
 ## Issues
+Current Status: One node has been deployed, outside the SEC. It's temperature reading is high, but is updated to the dashboard: http://en1-pi.eecs.tufts.edu/ at NODE1 for apper-dingos" Pictures of it installed on 5/13/22 are in the deployedNodeImages folder. 
+
+## Issues
 - Uploading issue with bootloader [timed-out-waiting-for-packet-header]
 	- https://github.com/espressif/esptool/issues/136
 	- https://arduino.stackexchange.com/questions/38012/major-difference-between-dtr-signal-and-rts-signal
